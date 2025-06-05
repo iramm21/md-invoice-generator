@@ -1,36 +1,137 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🧾 Invoice Markdown SaaS
 
-## Getting Started
+A modern, Markdown-powered invoicing SaaS built with **Next.js 14**, **React**, **Tailwind CSS**, **Prisma**, and **NextAuth**. Create, preview, and export beautiful invoices as PDFs — all with markdown.
 
-First, run the development server:
+![App Screenshot](./public/preview.png)
+
+---
+
+## ✨ Features
+
+- 🔐 **Authentication** via email/password using NextAuth
+- 📄 **Markdown Invoice Editor** with live preview
+- 📦 **PDF Export** using `@react-pdf/renderer`
+- 🧠 **Server-Side Rendering** with secure access control
+- 🗃️ **Prisma ORM** with MySQL
+- 🧭 **App Router** with layouts, loading states, and dynamic routes
+- 🎨 Fully styled with **Tailwind CSS**
+- 🧱 Clean, modular architecture (lib, components, routes)
+
+---
+
+## 🚀 Tech Stack
+
+| Stack      | Tool                            |
+|------------|----------------------------------|
+| Frontend   | Next.js 14 (App Router, RSC)     |
+| Styling    | Tailwind CSS                     |
+| Auth       | NextAuth.js (Credentials)        |
+| Database   | Prisma + MySQL       |
+| Markdown   | React Markdown + Remark GFM      |
+| PDF        | @react-pdf/renderer              |
+| Hosting    | Vercel or any Node.js platform   |
+
+---
+
+## 📸 Screenshots
+
+| Dashboard                            | Editor with Markdown                  | PDF Export                     |
+|-------------------------------------|---------------------------------------|--------------------------------|
+| ![Dashboard](./public/dashboard.png) | ![Editor](./public/editor.png)        | ![PDF](./public/pdf.png)       |
+
+---
+
+## 🛠️ Getting Started
+
+### 1. Clone the repo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/iramm21/md-invoice-generator.git
+cd md-invoice-generator
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install dependencies
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+Copy
+pnpm install
+# or
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Configure environment variables
 
-## Learn More
+Create a .env file in the root:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+DATABASE_URL="file:./dev.db" # or your MySQL URL
+AUTH_SECRET="your-secret-here"
+NEXTAUTH_SECRET="your-secret-here"
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Generate and seed the database
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npx prisma db push
+```
 
-## Deploy on Vercel
+### 5. Start the dev server
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm dev
+# or
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🧪 Live Demo
+
+Coming soon — deploy to Vercel:
+
+---
+
+## 📁 Project Structure
+
+```bash
+app/
+  └── dashboard/
+       └── invoices/
+            └── [id]/page.tsx       # Invoice detail + PDF link
+       └── layout.tsx               # Protected dashboard layout
+  └── layout.tsx                    # Root layout
+lib/
+  └── actions/                      # Form actions
+  └── prisma.ts                     # Prisma client
+  └── session.ts                    # Auth/session helpers
+components/
+  └── SignOutButton.tsx
+```
+
+---
+
+## ✅ Roadmap
+
+- [x]Invoice creation & storage
+- [x]Markdown support
+- [x]PDF download
+- [x]Auth with credentials
+- [x]Dark mode
+- [ ]Invoice editing & delete
+- [ ]Stripe integration
+- [ ]Team-based access / sharing
+
+---
+
+## 👨‍💻 Author
+
+**Isaac**
+[Your Portfolio](https://yourportfolio.com)
+[Twitter](https://twitter.com/yourhandle)
+[GitHub](https://github.com/yourusername)
+
+---
+
+Let me know if you want it to open in a new tab or styled specifically for react-markdown.
+
+---
