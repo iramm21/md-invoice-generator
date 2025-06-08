@@ -2,7 +2,6 @@
 
 import { db } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
-import { redirect } from "next/navigation";
 
 export async function createInvoice(formData: FormData) {
   const session = await requireSession();
@@ -10,7 +9,11 @@ export async function createInvoice(formData: FormData) {
   const title = formData.get("title") as string;
   const markdown = formData.get("markdown") as string;
 
-  await db.invoice.create({
+  if (!title || !markdown) {
+    throw new Error("Missing fields");
+  }
+
+  const invoice = await db.invoice.create({
     data: {
       title,
       markdown,
@@ -18,5 +21,5 @@ export async function createInvoice(formData: FormData) {
     },
   });
 
-  redirect("/dashboard/invoices");
+  return invoice.id; // ✅ Return the ID
 }

@@ -1,10 +1,8 @@
-// app/dashboard/invoices/[id]/pdf/route.tsx
 import { db } from "@/lib/prisma";
 import InvoicePDF from "@/lib/pdf/InvoicePDF";
 import { requireSession } from "@/lib/session";
 import { renderToStream } from "@react-pdf/renderer";
 
-// ✅ force Node runtime
 export const runtime = "nodejs";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {

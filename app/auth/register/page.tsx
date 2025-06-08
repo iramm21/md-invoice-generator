@@ -1,10 +1,20 @@
+"use client";
+
+import { useActionState } from "react";
 import { registerUser } from "@/lib/actions/auth";
 
+const initialState = {
+  success: true,
+  message: "",
+};
+
 export default function RegisterPage() {
+  const [state, formAction] = useActionState(registerUser, initialState);
+
   return (
     <div className="min-h-screen flex items-center justify-center px-6 sm:px-10 py-16 bg-white dark:bg-black text-gray-900 dark:text-white font-sans">
       <form
-        action={registerUser}
+        action={formAction}
         className="w-full max-w-md space-y-6 bg-white dark:bg-neutral-900 p-8 rounded-xl shadow-md border border-gray-200 dark:border-gray-800"
       >
         <h1 className="text-2xl font-bold text-center">Create an Account</h1>
@@ -23,6 +33,10 @@ export default function RegisterPage() {
           required
           className="w-full p-3 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
         />
+
+        {state?.success === false && (
+          <p className="text-red-500 text-sm text-center">{state.message}</p>
+        )}
 
         <button
           type="submit"

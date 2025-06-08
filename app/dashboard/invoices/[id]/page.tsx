@@ -1,5 +1,3 @@
-// app/dashboard/invoices/[id]/page.tsx
-
 import { db } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import ReactMarkdown from "react-markdown";
