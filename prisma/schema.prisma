@@ -16,10 +16,18 @@ model User {
 }
 
 model Invoice {
-  id        String   @id @default(cuid())
-  title     String
-  markdown  String   @db.Text
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  title         String
+  markdown      String   @db.Text
+  clientName    String
+  clientEmail   String?
+  issueDate     DateTime
+  dueDate       DateTime
+  taxRate       Float    @default(0)
+  discount      Float    @default(0)
+  companyLogo   String?  // Optional URL
+  notes         String?  @db.Text
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  createdAt     DateTime @default(now())
 }

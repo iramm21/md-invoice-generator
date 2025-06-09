@@ -4,6 +4,14 @@ export type InvoiceItem = {
   unitPrice: number;
 };
 
+export type InvoiceMeta = {
+  clientName: string;
+  clientEmail: string;
+  discount: number; // as percentage
+  taxRate: number; // as percentage
+  companyLogoUrl: string;
+};
+
 export type InvoiceFormData = {
   title: string;
   clientName: string;

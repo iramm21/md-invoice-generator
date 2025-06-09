@@ -3,70 +3,85 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createInvoice } from "@/lib/actions/invoice";
-
-type InvoiceItem = {
-  description: string;
-  quantity: number;
-  unitPrice: number;
-};
+import type { InvoiceItem, InvoiceFormData } from "@/types/invoice";
 
 export default function NewInvoicePage() {
-  const [title, setTitle] = useState("");
-  const [items, setItems] = useState<InvoiceItem[]>([
-    { description: "", quantity: 1, unitPrice: 0 },
-  ]);
+  const [formData, setFormData] = useState<InvoiceFormData>({
+    title: "",
+    clientName: "",
+    clientEmail: "",
+    issueDate: "",
+    dueDate: "",
+    items: [{ description: "", quantity: 1, unitPrice: 0 }],
+    notes: "",
+  });
+  const [discount, setDiscount] = useState(0);
+  const [taxRate, setTaxRate] = useState(0);
+  const [companyLogoUrl, setCompanyLogoUrl] = useState("");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const addItem = () => {
-    setItems((prev) => [
-      ...prev,
-      { description: "", quantity: 1, unitPrice: 0 },
-    ]);
-  };
-
-  const handleChange = (
+  const handleItemChange = (
     index: number,
     field: keyof InvoiceItem,
     value: string
   ) => {
-    const updated = [...items];
-    updated[index] = {
-      ...updated[index],
+    const updatedItems = [...formData.items];
+    updatedItems[index] = {
+      ...updatedItems[index],
       [field]: field === "description" ? value : Number(value),
     };
-    setItems(updated);
+    setFormData((prev) => ({ ...prev, items: updatedItems }));
   };
 
-  const total = items.reduce(
+  const addItem = () => {
+    setFormData((prev) => ({
+      ...prev,
+      items: [...prev.items, { description: "", quantity: 1, unitPrice: 0 }],
+    }));
+  };
+
+  const subtotal = formData.items.reduce(
     (acc, item) => acc + item.quantity * item.unitPrice,
     0
   );
+  const taxAmount = (subtotal * taxRate) / 100;
+  const discountAmount = (subtotal * discount) / 100;
+  const total = subtotal + taxAmount - discountAmount;
+
+  const handleChange = (field: keyof InvoiceFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const markdown = `| Description | Quantity | Unit Price | Total |
 |-------------|----------|------------|-------|
-${items
+${formData.items
   .map(
     (item) =>
       `| ${item.description} | ${item.quantity} | $${item.unitPrice.toFixed(
         2
       )} | $${(item.quantity * item.unitPrice).toFixed(2)} |`
   )
-  .join("\n")}
-`;
+  .join("\n")}`;
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("markdown", markdown);
+    const payload = new FormData();
+    payload.append("title", formData.title);
+    payload.append("clientName", formData.clientName);
+    payload.append("clientEmail", formData.clientEmail ?? "");
+    payload.append("issueDate", formData.issueDate);
+    payload.append("dueDate", formData.dueDate);
+    payload.append("notes", formData.notes ?? "");
+    payload.append("markdown", markdown);
+    payload.append("discount", discount.toString());
+    payload.append("taxRate", taxRate.toString());
+    payload.append("companyLogoUrl", companyLogoUrl);
 
     startTransition(async () => {
-      const id = await createInvoice(formData);
-      if (id) {
-        router.push(`/dashboard/invoices/${id}`);
-      }
+      const id = await createInvoice(payload);
+      if (id) router.push(`/dashboard/invoices/${id}`);
     });
   };
 
@@ -77,83 +92,148 @@ ${items
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div>
-          <label className="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-            Invoice Title
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            placeholder="e.g. Website Development"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-neutral-900 text-sm shadow-sm focus:ring-2 focus:ring-black dark:focus:ring-white outline-none"
-          />
+        {/* Top Fields */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block mb-1 font-medium">Invoice Title</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => handleChange("title", e.target.value)}
+              className="w-full input"
+              required
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">Company Logo URL</label>
+            <input
+              type="text"
+              value={companyLogoUrl}
+              onChange={(e) => setCompanyLogoUrl(e.target.value)}
+              className="w-full input"
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">Client Name</label>
+            <input
+              type="text"
+              value={formData.clientName}
+              onChange={(e) => handleChange("clientName", e.target.value)}
+              className="w-full input"
+              required
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">Client Email</label>
+            <input
+              type="email"
+              value={formData.clientEmail}
+              onChange={(e) => handleChange("clientEmail", e.target.value)}
+              className="w-full input"
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">Issue Date</label>
+            <input
+              type="date"
+              value={formData.issueDate}
+              onChange={(e) => handleChange("issueDate", e.target.value)}
+              className="w-full input"
+              required
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">Due Date</label>
+            <input
+              type="date"
+              value={formData.dueDate}
+              onChange={(e) => handleChange("dueDate", e.target.value)}
+              className="w-full input"
+              required
+            />
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <label className="block font-medium text-gray-700 dark:text-gray-300">
-            Line Items
-          </label>
-
-          {items.map((item, index) => (
+        {/* Items */}
+        <div>
+          <label className="block font-medium mb-2">Line Items</label>
+          {formData.items.map((item, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center bg-gray-50 dark:bg-neutral-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+              className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3"
             >
               <input
                 type="text"
                 placeholder="Description"
                 value={item.description}
                 onChange={(e) =>
-                  handleChange(index, "description", e.target.value)
+                  handleItemChange(index, "description", e.target.value)
                 }
+                className="input"
                 required
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-neutral-900 text-sm"
               />
               <input
                 type="number"
                 placeholder="Quantity"
                 value={item.quantity}
                 onChange={(e) =>
-                  handleChange(index, "quantity", e.target.value)
+                  handleItemChange(index, "quantity", e.target.value)
                 }
+                className="input"
                 required
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-neutral-900 text-sm"
               />
               <input
                 type="number"
                 placeholder="Unit Price"
                 value={item.unitPrice}
                 onChange={(e) =>
-                  handleChange(index, "unitPrice", e.target.value)
+                  handleItemChange(index, "unitPrice", e.target.value)
                 }
+                className="input"
                 required
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-neutral-900 text-sm"
               />
             </div>
           ))}
-
           <button
             type="button"
             onClick={addItem}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-sm text-blue-600 hover:underline"
           >
             + Add Item
           </button>
         </div>
 
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-lg text-gray-800 dark:text-gray-100">
-            Total: ${total.toFixed(2)}
-          </span>
+        {/* Finance */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label className="block mb-1 font-medium">Discount (%)</label>
+            <input
+              type="number"
+              value={discount}
+              onChange={(e) => setDiscount(Number(e.target.value))}
+              className="w-full input"
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">Tax Rate (%)</label>
+            <input
+              type="number"
+              value={taxRate}
+              onChange={(e) => setTaxRate(Number(e.target.value))}
+              className="w-full input"
+            />
+          </div>
+        </div>
+
+        {/* Total */}
+        <div className="text-right font-semibold text-xl mt-4">
+          Final Total: ${total.toFixed(2)}
         </div>
 
         <button
           type="submit"
           disabled={isPending}
-          className="w-full md:w-auto bg-black dark:bg-white text-white dark:text-black font-medium px-6 py-2.5 rounded-md hover:opacity-90 transition"
+          className="bg-black text-white px-6 py-3 rounded-md font-medium hover:opacity-90 transition"
         >
           {isPending ? "Saving..." : "Save Invoice"}
         </button>

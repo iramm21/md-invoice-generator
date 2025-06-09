@@ -5,10 +5,12 @@ import {
   View,
   StyleSheet,
   Font,
+  Image,
 } from "@react-pdf/renderer";
 import { marked } from "marked";
 import type { Tokens } from "marked";
 
+// Register font
 Font.register({
   family: "Roboto",
   fonts: [
@@ -25,10 +27,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 1.6,
   },
+  header: {
+    marginBottom: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  logo: {
+    width: 100,
+    height: 40,
+  },
   h1: { fontSize: 20, marginBottom: 20, fontWeight: "bold" },
   h2: { fontSize: 16, marginBottom: 10, fontWeight: "bold" },
   p: { marginBottom: 8 },
   listItem: { marginLeft: 10, marginBottom: 4 },
+  meta: { marginBottom: 10 },
   table: {
     display: "flex",
     flexDirection: "column",
@@ -55,35 +68,77 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: "#ccc",
   },
-  tableTotalRow: {
-    flexDirection: "row",
-    borderTopWidth: 2,
-    borderTopColor: "#000",
+  summary: {
+    marginTop: 12,
+    alignItems: "flex-end",
   },
-  tableTotalLabel: {
-    flex: 3,
-    padding: 6,
-    textAlign: "right",
-    fontWeight: "bold",
-  },
-  tableTotalValue: {
-    flex: 1,
-    padding: 6,
-    textAlign: "right",
-    fontWeight: "bold",
+  notes: {
+    marginTop: 20,
+    fontSize: 10,
+    color: "#555",
   },
 });
 
 type Props = {
   title: string;
   content: string;
+  clientName: string;
+  clientEmail?: string;
+  issueDate: string;
+  dueDate: string;
+  taxRate: number;
+  discount: number;
+  companyLogo?: string;
+  notes?: string;
 };
 
-const InvoicePDF = ({ title, content }: Props) => {
+const InvoicePDF = ({
+  title,
+  content,
+  clientName,
+  clientEmail,
+  issueDate,
+  dueDate,
+  taxRate,
+  discount,
+  companyLogo,
+  notes,
+}: Props) => {
   const tokens = marked.lexer(content);
+  let subtotal = 0;
 
   const renderTokens = () =>
     tokens.map((token, i) => {
+      if (token.type === "table") {
+        const tableToken = token as Tokens.Table;
+
+        tableToken.rows.forEach((row) => {
+          const amount = parseFloat(row[3]?.text?.replace("$", "") || "0");
+          subtotal += isNaN(amount) ? 0 : amount;
+        });
+
+        return (
+          <View key={i} style={styles.table}>
+            <View style={styles.tableRow}>
+              {tableToken.header.map((cell, idx) => (
+                <Text key={`h-${idx}`} style={styles.tableHeaderCell}>
+                  {cell.text}
+                </Text>
+              ))}
+            </View>
+            {tableToken.rows.map((row, rIdx) => (
+              <View key={`r-${rIdx}`} style={styles.tableRow}>
+                {row.map((cell, cIdx) => (
+                  <Text key={`c-${rIdx}-${cIdx}`} style={styles.tableCell}>
+                    {cell.text}
+                  </Text>
+                ))}
+              </View>
+            ))}
+          </View>
+        );
+      }
+
       if (token.type === "heading") {
         return (
           <Text key={i} style={token.depth === 1 ? styles.h1 : styles.h2}>
@@ -109,51 +164,44 @@ const InvoicePDF = ({ title, content }: Props) => {
         ));
       }
 
-      if (token.type === "table") {
-        const tableToken = token as Tokens.Table;
-
-        // Compute total from last column (assumes "$123.00")
-        const total = tableToken.rows.reduce((acc, row) => {
-          const value = row[row.length - 1].text.replace(/[^0-9.]/g, "");
-          return acc + parseFloat(value || "0");
-        }, 0);
-
-        return (
-          <View key={i} style={styles.table}>
-            <View style={styles.tableRow}>
-              {tableToken.header.map((cell, idx) => (
-                <Text key={`h-${idx}`} style={styles.tableHeaderCell}>
-                  {cell.text}
-                </Text>
-              ))}
-            </View>
-
-            {tableToken.rows.map((row, rIdx) => (
-              <View key={`r-${rIdx}`} style={styles.tableRow}>
-                {row.map((cell, cIdx) => (
-                  <Text key={`c-${rIdx}-${cIdx}`} style={styles.tableCell}>
-                    {cell.text}
-                  </Text>
-                ))}
-              </View>
-            ))}
-
-            <View style={styles.tableTotalRow}>
-              <Text style={styles.tableTotalLabel}>Total</Text>
-              <Text style={styles.tableTotalValue}>${total.toFixed(2)}</Text>
-            </View>
-          </View>
-        );
-      }
-
       return null;
     });
+
+  const tax = subtotal * (taxRate / 100);
+  const discountAmount = subtotal * (discount / 100);
+  const total = subtotal + tax - discountAmount;
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.h1}>{title}</Text>
+        <View style={styles.header}>
+          <Text style={styles.h1}>{title}</Text>
+          {companyLogo ? <Image src={companyLogo} style={styles.logo} /> : null}
+        </View>
+
+        <View style={styles.meta}>
+          <Text>Client: {clientName}</Text>
+          {clientEmail && <Text>Email: {clientEmail}</Text>}
+          <Text>Issue Date: {new Date(issueDate).toLocaleDateString()}</Text>
+          <Text>Due Date: {new Date(dueDate).toLocaleDateString()}</Text>
+        </View>
+
         <View>{renderTokens()}</View>
+
+        <View style={styles.summary}>
+          <Text>Subtotal: ${subtotal.toFixed(2)}</Text>
+          <Text>
+            Tax ({taxRate}%): ${tax.toFixed(2)}
+          </Text>
+          <Text>
+            Discount ({discount}%): -${discountAmount.toFixed(2)}
+          </Text>
+          <Text style={{ fontWeight: "bold", fontSize: 14 }}>
+            Total: ${total.toFixed(2)}
+          </Text>
+        </View>
+
+        {notes && <Text style={styles.notes}>Notes: {notes}</Text>}
       </Page>
     </Document>
   );
