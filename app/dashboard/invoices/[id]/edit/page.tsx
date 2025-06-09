@@ -1,3 +1,5 @@
+// app/dashboard/invoices/[id]/edit/page.tsx
+
 import { db } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import EditInvoiceForm from "./EditInvoiceForm";
@@ -17,7 +19,7 @@ export default async function EditInvoicePage({
     },
   });
 
-  if (!invoice) return notFound();
+  if (!invoice) notFound(); // ✅ Correct usage
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">

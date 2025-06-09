@@ -53,7 +53,7 @@ export default function NewInvoicePage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const markdown = `| Description | Quantity | Unit Price | Total |
