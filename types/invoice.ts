@@ -20,4 +20,5 @@ export type InvoiceFormData = {
   dueDate: string;
   items: InvoiceItem[];
   notes?: string;
+  logoFile?: File;
 };

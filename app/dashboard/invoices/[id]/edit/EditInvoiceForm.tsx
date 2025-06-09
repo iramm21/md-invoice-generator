@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateInvoice } from "@/lib/actions/invoice";
 import type { Invoice } from "@prisma/client";
 
-type Props = {
-  invoice: Invoice;
-};
+type Props = { invoice: Invoice };
 
 export default function EditInvoiceForm({ invoice }: Props) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: invoice.title,
@@ -41,8 +40,13 @@ export default function EditInvoiceForm({ invoice }: Props) {
     payload.append("notes", formData.notes);
     payload.append("taxRate", formData.taxRate.toString());
     payload.append("discount", formData.discount.toString());
-    payload.append("companyLogoUrl", formData.companyLogoUrl);
-    payload.append("markdown", invoice.markdown); // reuse existing markdown
+    payload.append("companyLogoUrl", formData.companyLogoUrl); // fallback to original logo
+    payload.append("markdown", invoice.markdown);
+
+    const file = fileInputRef.current?.files?.[0];
+    if (file) {
+      payload.append("logoFile", file);
+    }
 
     startTransition(async () => {
       await updateInvoice(invoice.id, payload);
@@ -63,15 +67,26 @@ export default function EditInvoiceForm({ invoice }: Props) {
             required
           />
         </div>
+
         <div>
-          <label className="block mb-1 font-medium">Company Logo URL</label>
+          <label className="block mb-1 font-medium">
+            Upload New Logo (optional)
+          </label>
           <input
-            type="text"
-            value={formData.companyLogoUrl}
-            onChange={(e) => handleChange("companyLogoUrl", e.target.value)}
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
             className="w-full input"
           />
+          {formData.companyLogoUrl && (
+            <img
+              src={formData.companyLogoUrl}
+              alt="Current Logo"
+              className="mt-2 h-12 object-contain"
+            />
+          )}
         </div>
+
         <div>
           <label className="block mb-1 font-medium">Client Name</label>
           <input
@@ -82,6 +97,7 @@ export default function EditInvoiceForm({ invoice }: Props) {
             required
           />
         </div>
+
         <div>
           <label className="block mb-1 font-medium">Client Email</label>
           <input
@@ -91,6 +107,7 @@ export default function EditInvoiceForm({ invoice }: Props) {
             className="w-full input"
           />
         </div>
+
         <div>
           <label className="block mb-1 font-medium">Issue Date</label>
           <input
@@ -101,6 +118,7 @@ export default function EditInvoiceForm({ invoice }: Props) {
             required
           />
         </div>
+
         <div>
           <label className="block mb-1 font-medium">Due Date</label>
           <input
@@ -111,6 +129,7 @@ export default function EditInvoiceForm({ invoice }: Props) {
             required
           />
         </div>
+
         <div>
           <label className="block mb-1 font-medium">Tax Rate (%)</label>
           <input
@@ -120,6 +139,7 @@ export default function EditInvoiceForm({ invoice }: Props) {
             className="w-full input"
           />
         </div>
+
         <div>
           <label className="block mb-1 font-medium">Discount (%)</label>
           <input
@@ -129,6 +149,7 @@ export default function EditInvoiceForm({ invoice }: Props) {
             className="w-full input"
           />
         </div>
+
         <div className="md:col-span-2">
           <label className="block mb-1 font-medium">Notes</label>
           <textarea

@@ -14,10 +14,10 @@ export default function NewInvoicePage() {
     dueDate: "",
     items: [{ description: "", quantity: 1, unitPrice: 0 }],
     notes: "",
+    logoFile: undefined,
   });
   const [discount, setDiscount] = useState(0);
   const [taxRate, setTaxRate] = useState(0);
-  const [companyLogoUrl, setCompanyLogoUrl] = useState("");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -77,7 +77,10 @@ ${formData.items
     payload.append("markdown", markdown);
     payload.append("discount", discount.toString());
     payload.append("taxRate", taxRate.toString());
-    payload.append("companyLogoUrl", companyLogoUrl);
+
+    if (formData.logoFile) {
+      payload.append("logoFile", formData.logoFile);
+    }
 
     startTransition(async () => {
       const id = await createInvoice(payload);
@@ -105,11 +108,16 @@ ${formData.items
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Company Logo URL</label>
+            <label className="block mb-1 font-medium">Company Logo</label>
             <input
-              type="text"
-              value={companyLogoUrl}
-              onChange={(e) => setCompanyLogoUrl(e.target.value)}
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  logoFile: e.target.files?.[0],
+                }))
+              }
               className="w-full input"
             />
           </div>

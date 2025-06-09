@@ -21,6 +21,12 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     return new Response("Not found", { status: 404 });
   }
 
+  // Ensure full absolute path to logo
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const absoluteLogoUrl = invoice.companyLogo
+    ? `${baseUrl}${invoice.companyLogo}`
+    : undefined;
+
   const pdfStream = await renderToStream(
     <InvoicePDF
       title={invoice.title}
@@ -31,7 +37,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
       dueDate={invoice.dueDate.toISOString().split("T")[0]}
       taxRate={invoice.taxRate}
       discount={invoice.discount}
-      companyLogo={invoice.companyLogo || ""}
+      companyLogo={absoluteLogoUrl}
       notes={invoice.notes || ""}
     />
   );
