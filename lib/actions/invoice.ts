@@ -3,6 +3,7 @@
 import { db } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 
+// CREATE INVOICE
 export async function createInvoice(formData: FormData) {
   const session = await requireSession();
 
@@ -42,4 +43,56 @@ export async function createInvoice(formData: FormData) {
   });
 
   return invoice.id;
+}
+
+// DELETE INVOICE
+export async function deleteInvoice(id: string) {
+  const session = await requireSession();
+
+  if (!session?.user?.id) {
+    throw new Error("User is not authenticated or session is invalid");
+  }
+
+  await db.invoice.delete({
+    where: {
+      id,
+      userId: session.user.id, // ✅ Will fail safely if user mismatch
+    },
+  });
+}
+
+// UPDATE INVOICE
+export async function updateInvoice(id: string, formData: FormData) {
+  const session = await requireSession();
+
+  if (!session?.user?.id) {
+    throw new Error("User is not authenticated or session is invalid");
+  }
+
+  const data = {
+    title: formData.get("title") as string,
+    markdown: formData.get("markdown") as string,
+    clientName: formData.get("clientName") as string,
+    clientEmail: formData.get("clientEmail") as string,
+    issueDate: new Date(formData.get("issueDate") as string),
+    dueDate: new Date(formData.get("dueDate") as string),
+    discount: parseFloat(formData.get("discount") as string) || 0,
+    taxRate: parseFloat(formData.get("taxRate") as string) || 0,
+    companyLogo: formData.get("companyLogoUrl") as string,
+    notes: formData.get("notes") as string,
+  };
+
+  const updated = await db.invoice.updateMany({
+    where: {
+      id,
+      userId: session.user.id,
+    },
+    data,
+  });
+
+  if (updated.count === 0) {
+    throw new Error("Invoice not found or not authorized.");
+  }
+
+  return id;
 }

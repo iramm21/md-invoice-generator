@@ -43,6 +43,12 @@ export default async function InvoiceDetailPage({ params }: Props) {
 
         <div>
           <Link
+            href={`/dashboard/invoices/${params.id}/edit`}
+            className="ml-4 inline-block bg-blue-600 text-white px-6 py-2.5 rounded-full font-medium hover:opacity-90 transition"
+          >
+            Edit Invoice
+          </Link>
+          <Link
             href={`/dashboard/invoices/${params.id}/pdf`}
             target="_blank"
             className="inline-block bg-black dark:bg-white text-white dark:text-black font-semibold px-6 py-2.5 rounded-full hover:opacity-90 transition"
