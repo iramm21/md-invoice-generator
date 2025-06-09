@@ -4,6 +4,7 @@ import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateInvoice } from "@/lib/actions/invoice";
 import type { Invoice } from "@prisma/client";
+import Image from "next/image";
 
 type Props = { invoice: Invoice };
 
@@ -40,7 +41,7 @@ export default function EditInvoiceForm({ invoice }: Props) {
     payload.append("notes", formData.notes);
     payload.append("taxRate", formData.taxRate.toString());
     payload.append("discount", formData.discount.toString());
-    payload.append("companyLogoUrl", formData.companyLogoUrl); // fallback to original logo
+    payload.append("companyLogoUrl", formData.companyLogoUrl);
     payload.append("markdown", invoice.markdown);
 
     const file = fileInputRef.current?.files?.[0];
@@ -79,11 +80,15 @@ export default function EditInvoiceForm({ invoice }: Props) {
             className="w-full input"
           />
           {formData.companyLogoUrl && (
-            <img
-              src={formData.companyLogoUrl}
-              alt="Current Logo"
-              className="mt-2 h-12 object-contain"
-            />
+            <div className="mt-2">
+              <Image
+                src={formData.companyLogoUrl}
+                alt="Current Logo"
+                width={160}
+                height={48}
+                className="object-contain h-12 w-auto"
+              />
+            </div>
           )}
         </div>
 
