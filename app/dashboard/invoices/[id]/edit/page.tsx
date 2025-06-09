@@ -1,14 +1,13 @@
-// app/dashboard/invoices/[id]/edit/page.tsx
-
 import { db } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import EditInvoiceForm from "./EditInvoiceForm";
+import { notFound } from "next/navigation";
 
-type Props = {
+export default async function EditInvoicePage({
+  params,
+}: {
   params: { id: string };
-};
-
-export default async function EditInvoicePage({ params }: Props) {
+}) {
   const session = await requireSession();
 
   const invoice = await db.invoice.findFirst({
@@ -18,13 +17,7 @@ export default async function EditInvoicePage({ params }: Props) {
     },
   });
 
-  if (!invoice) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-500 text-lg">
-        Invoice not found.
-      </div>
-    );
-  }
+  if (!invoice) return notFound();
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
